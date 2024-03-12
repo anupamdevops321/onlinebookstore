@@ -1,10 +1,9 @@
-name: Build
+name: Build and Test with JaCoCo
 
 on:
   push:
     branches:
       - master
-
 
 jobs:
   build:
@@ -31,8 +30,12 @@ jobs:
           path: ~/.m2
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
-      - name: Build and analyze
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-        run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=demo-1 -Dsonar.projectName='demo-1'
+      - name: Build with Maven
+        run: mvn -B verify
+      - name: Run tests and generate JaCoCo report
+        run: mvn -B jacoco:report
+      - name: Upload JaCoCo coverage report
+        uses: actions/upload-artifact@v2
+        with:
+          name: jacoco-report
+          path: target/site/jacoco/index.html
